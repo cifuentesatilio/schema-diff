@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.angular/
+.git/
+*.sql
+*.dump
+*.bak
+.env
+README.md

@@ -1,0 +1,10 @@
+services:
+  schema-diff:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+    image: schema-diff
+    container_name: schema-diff
+    ports:
+      - "8080:80"
+    restart: unless-stopped

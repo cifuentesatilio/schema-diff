@@ -93,8 +93,15 @@ Los filtros permiten acotar por base de datos, por lado (DEV/QA/AMBOS) y por tex
 ---
 
 ## Estructura del proyecto
+## Estructura del proyecto
 ```
 schema-diff/
+├── infra/
+│   └── docker/
+│       ├── Dockerfile         # Build multistage: Node (build) + Nginx (serve)
+│       ├── docker-compose.yml # Configuración del contenedor
+│       ├── nginx.conf         # Configuración de Nginx
+│       └── .dockerignore      # Archivos excluidos del build
 ├── src/
 │   ├── app/
 │   │   ├── core/
@@ -117,7 +124,6 @@ schema-diff/
 ├── package.json
 └── README.md
 ```
-
 ---
 
 ## Seguridad
@@ -182,6 +188,65 @@ Los archivos generados quedan en `dist/schema-diff/browser/`. Son archivos está
 5. Abre un Pull Request
 
 ---
+
+## Docker
+
+La aplicación está configurada para correr en un contenedor Docker con Nginx. Los archivos de configuración están en `infra/docker/`.
+
+### Requisitos
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+### Estructura
+```
+infra/
+└── docker/
+    ├── Dockerfile         # Build multistage: Node (build) + Nginx (serve)
+    ├── docker-compose.yml # Configuración del contenedor
+    ├── nginx.conf         # Configuración de Nginx
+    └── .dockerignore      # Archivos excluidos del build
+```
+
+### Levantar el contenedor
+```bash
+cd infra/docker
+
+# Primera vez o cuando hay cambios en el código
+docker compose up --build -d
+
+# Sin cambios en el código
+docker compose up -d
+```
+
+Abre `http://localhost:8080` en el navegador.
+
+### Comandos útiles
+```bash
+# Ver estado del contenedor
+docker compose ps
+
+# Ver logs
+docker compose logs
+
+# Detener
+docker compose stop
+
+# Detener y eliminar el contenedor
+docker compose down
+```
+
+### Detalles del contenedor
+
+| Parámetro | Valor |
+|---|---|
+| Nombre del contenedor | `mysql-schema-diff` |
+| Nombre de la imagen | `mysql-schema-diff` |
+| Puerto | `8080` |
+| Política de reinicio | `unless-stopped` |
+
+> El contenedor se reinicia automáticamente si se cae o cuando Docker Desktop inicia.
+
+----
 
 ## Tecnologías
 
