@@ -93,29 +93,30 @@ Los filtros permiten acotar por base de datos, por lado (DEV/QA/AMBOS) y por tex
 ---
 
 ## Estructura del proyecto
-
+```
 schema-diff/
 ├── src/
 │   ├── app/
 │   │   ├── core/
 │   │   │   ├── models/
-│   │   │   │   └── schema.models.ts        # Interfaces y tipos
+│   │   │   │   └── schema.models.ts          # Interfaces y tipos
 │   │   │   └── services/
-│   │   │       └── schema-parser.service.ts # Parser y comparador
+│   │   │       └── schema-parser.service.ts  # Parser y comparador
 │   │   ├── features/
 │   │   │   └── diff/
-│   │   │       ├── diff.component.ts        # Lógica del componente
-│   │   │       ├── diff.component.html      # Template
-│   │   │       └── diff.component.scss      # Estilos
-│   │   ├── app.ts                           # Componente raíz
-│   │   ├── app.config.ts                    # Configuración Angular
-│   │   └── app.scss                         # Estilos globales
+│   │   │       ├── diff.component.ts         # Lógica del componente
+│   │   │       ├── diff.component.html       # Template
+│   │   │       └── diff.component.scss       # Estilos
+│   │   ├── app.ts                            # Componente raíz
+│   │   ├── app.config.ts                     # Configuración Angular
+│   │   └── app.scss                          # Estilos globales
 │   ├── index.html
 │   └── main.ts
 ├── .gitignore
 ├── angular.json
 ├── package.json
 └── README.md
+```
 
 ---
 
