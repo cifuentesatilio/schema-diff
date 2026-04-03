@@ -30,7 +30,7 @@ export class SchemaParserService {
 
     const fullText = lines.join('\n');
 
-    // Track USE statements
+    // Track USE statements by character position
     const useStmts: { pos: number; db: string }[] = [];
     for (const m of fullText.matchAll(/^USE `([^`]+)`/gim)) {
       useStmts.push({ pos: m.index!, db: m[1] });
@@ -40,6 +40,7 @@ export class SchemaParserService {
       let db = '';
       for (const u of useStmts) {
         if (u.pos <= pos) db = u.db;
+        else break;
       }
       return db;
     };
