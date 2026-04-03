@@ -1,11 +1,10 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
+import { DiffComponent } from './features/diff/diff.component';
 
 @Component({
   selector: 'app-root',
-  imports: [],
-  templateUrl: './app.html',
-  styleUrl: './app.scss'
+  standalone: true,
+  imports: [DiffComponent],
+  template: `<app-diff />`,
 })
-export class App {
-  protected readonly title = signal('schema-diff');
-}
+export class AppComponent {}

@@ -1,0 +1,202 @@
+<div class="wrapper">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header__title">
+      <span class="header__bar"></span>
+      <h1>MySQL Schema Diff</h1>
+    </div>
+    <p class="header__sub">Análisis estructural de esquemas · sin dependencias externas</p>
+  </div>
+
+  <!-- Upload -->
+  <div class="upload-grid">
+    @for (side of ['A', 'B']; track side) {
+      <div class="upload-side">
+        <div class="upload-side__label">
+          <span>Ambiente</span>
+          @if (side === 'A') {
+            <input [(ngModel)]="labelA" [ngModelOptions]="{standalone: true}"
+              (ngModelChange)="labelA.set($event)" [value]="labelA()"
+              class="upload-side__env upload-side__env--a" />
+          } @else {
+            <input [(ngModel)]="labelB" [ngModelOptions]="{standalone: true}"
+              (ngModelChange)="labelB.set($event)" [value]="labelB()"
+              class="upload-side__env upload-side__env--b" />
+          }
+        </div>
+        <div class="drop-zone"
+          [class.drop-zone--over]="dragOver() === side"
+          [class.drop-zone--a]="side === 'A'"
+          [class.drop-zone--b]="side === 'B'"
+          (dragover)="$event.preventDefault(); dragOver.set(side === 'A' ? 'A' : 'B')"
+          (dragleave)="dragOver.set(null)"
+          (drop)="onDrop($event, side === 'A' ? 'A' : 'B')"
+          (click)="fileInput.click()">
+          <input #fileInput type="file" accept=".sql" hidden
+            (change)="onFileChange($event, side === 'A' ? 'A' : 'B')" />
+          @if ((side === 'A' ? fileA() : fileB()); as file) {
+            <div class="drop-zone__icon">📄</div>
+            <span class="drop-zone__name">{{ file.name }}</span>
+            <span class="drop-zone__size">{{ getFileSize(file) }}</span>
+          } @else {
+            <div class="drop-zone__arrow">⬆</div>
+            <span class="drop-zone__hint">Arrastra o click · .sql</span>
+          }
+        </div>
+      </div>
+
+      @if (side === 'A') {
+        <div class="upload-sep">⇄</div>
+      }
+    }
+  </div>
+
+  <!-- Button -->
+  <div class="actions">
+    <button class="btn-analyze"
+      [disabled]="!fileA() || !fileB() || loading()"
+      (click)="analyze()">
+      {{ loading() ? '⟳  Analizando...' : '▶  Comparar Esquemas' }}
+    </button>
+  </div>
+
+  <!-- Error -->
+  @if (error()) {
+    <div class="error-box">{{ error() }}</div>
+  }
+
+  <!-- Results -->
+  @if (result(); as res) {
+
+    <!-- Summary cards -->
+    <div class="summary-grid">
+      <div class="summary-total">
+        <div>
+          <div class="summary-total__label">Total diferencias</div>
+          <div class="summary-total__count" [class.summary-total__count--ok]="totalDiff() === 0">
+            {{ totalDiff() }}
+          </div>
+        </div>
+        <div class="summary-total__vs">
+          <span class="vs-a">{{ labelA() }}</span>
+          <span class="vs-sep">vs</span>
+          <span class="vs-b">{{ labelB() }}</span>
+        </div>
+      </div>
+
+      @for (key of categoryKeys; track key) {
+        <div class="summary-card"
+          [class.summary-card--active]="getCount(key) > 0"
+          [style.--card-color]="categories[key].color"
+          (click)="setTab(key)">
+          <div class="summary-card__icon">{{ categories[key].icon }}</div>
+          <div class="summary-card__count"
+            [style.color]="getCount(key) > 0 ? categories[key].color : '#334155'">
+            {{ getCount(key) }}
+          </div>
+          <div class="summary-card__label">{{ categories[key].label }}</div>
+        </div>
+      }
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      @for (key of categoryKeys; track key) {
+        <button class="tab-btn"
+          [class.tab-btn--active]="activeTab() === key"
+          [style.--tab-color]="categories[key].color"
+          (click)="setTab(key)">
+          {{ categories[key].label }}
+          @if (getCount(key) > 0) {
+            <span class="tab-btn__badge" [style.background]="categories[key].color + '30'" [style.color]="categories[key].color">
+              {{ getCount(key) }}
+            </span>
+          }
+        </button>
+      }
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <input class="filters__search" [value]="search()"
+        (input)="search.set($any($event.target).value)"
+        placeholder="Buscar..." />
+
+      <select class="filters__select" [value]="filterDb()"
+        (change)="filterDb.set($any($event.target).value)">
+        <option value="TODAS">Todas las BDs</option>
+        @for (db of allDbs(); track db) {
+          <option [value]="db">{{ db }}</option>
+        }
+      </select>
+
+      <select class="filters__select" [value]="filterLado()"
+        (change)="filterLado.set($any($event.target).value)">
+        <option value="TODOS">Todos los lados</option>
+        <option [value]="labelA()">{{ labelA() }}</option>
+        <option [value]="labelB()">{{ labelB() }}</option>
+        <option value="AMBOS">AMBOS</option>
+      </select>
+
+      <span class="filters__count">{{ filteredItems().length }} resultado(s)</span>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      @if (filteredItems().length > 0) {
+        <table class="diff-table">
+          <thead>
+            <tr>
+              @if (activeTab() === 'columnas') {
+                <th>Tabla</th><th>BD</th><th>Columna</th>
+              } @else if (activeTab() === 'indices') {
+                <th>Tabla</th><th>BD</th><th>Índice / Constraint</th>
+              } @else {
+                <th>Nombre</th><th>BD</th>
+              }
+              <th>Tipo</th><th>Lado</th><th>Detalle</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of filteredItems(); track $index) {
+              <tr class="diff-row">
+                @if (activeTab() === 'columnas') {
+                  <td class="cell-name">{{ item.tabla }}</td>
+                  <td class="cell-db">{{ item.base_datos || '—' }}</td>
+                  <td class="cell-mono">{{ item.columna }}</td>
+                } @else if (activeTab() === 'indices') {
+                  <td class="cell-name">{{ item.tabla }}</td>
+                  <td class="cell-db">{{ item.base_datos || '—' }}</td>
+                  <td class="cell-mono">{{ item.nombre }}</td>
+                } @else {
+                  <td class="cell-name cell-mono">{{ item.nombre }}</td>
+                  <td class="cell-db">{{ item.base_datos || '—' }}</td>
+                }
+                <td>
+                  <span class="badge"
+                    [style.background]="getBadge(item.tipo).bg"
+                    [style.color]="getBadge(item.tipo).color">
+                    {{ getBadge(item.tipo).label }}
+                  </span>
+                </td>
+                <td>
+                  <span class="cell-lado" [style.color]="getLadoColor(item.lado)">
+                    {{ item.lado }}
+                  </span>
+                </td>
+                <td class="cell-detail">{{ item.detalle }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <div class="empty">
+          <div class="empty__icon">✓</div>
+          <div>Sin diferencias en esta categoría</div>
+        </div>
+      }
+    </div>
+  }
+
+</div>
